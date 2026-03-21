@@ -4,9 +4,11 @@ const PROJECT_ID=import.meta.env.VITE_APPWRITE_PROJECT_ID
 const DATABASE_ID=import.meta.env.VITE_APPWRITE_DATABASE_ID
 const COLLECTION_ID=import.meta.env.VITE_APPWRITE_COLLECTION_ID
 
-const client=new Client()
-    .setEndpoint("https://cloud.appwrite.io/v1") //Sets the Appwrite API endpoint URL
-    .setProject(PROJECT_ID) //Sets the project ID so the client knows which Appwrite project to use.
+const client = new Client()
+
+  // TO
+  .setEndpoint("https://fra.cloud.appwrite.io/v1") //Sets the Appwrite API endpoint URL
+  .setProject(PROJECT_ID); //Sets the project ID so the client knows which Appwrite project to use.
 
 
 
@@ -59,4 +61,6 @@ export const getTrendingMovies=async()=>{
         
     }
 }
+
+//->databases->new database->Attributes
 

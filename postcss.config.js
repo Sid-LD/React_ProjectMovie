@@ -16,3 +16,5 @@ export default {
   ]
 }
 
+//npm install -D tailwindcss postcss autoprefixer
+
