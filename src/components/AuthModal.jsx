@@ -1,116 +1,157 @@
-import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useState } from 'react'
+import { createAccount, login } from '../appwriteAuth'
+import { useAuth } from '../context/AuthContext'
 
 const AuthModal = ({ onClose }) => {
-  const [isLogin, setIsLogin] = useState(true);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+    const { setUser } = useAuth()
+    const [mode, setMode] = useState('login') // 'login' | 'signup'
+    const [form, setForm] = useState({ name: '', email: '', password: '' })
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
 
-  const { login, register } = useAuth();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
-    try {
-      if (isLogin) {
-        await login(email, password);
-      } else {
-        if (password.length < 8) {
-          setError("Password must be at least 8 characters");
-          setIsLoading(false);
-          return;
-        }
-        await register(name, email, password);
-      }
-      onClose();
-    } catch (err) {
-      setError(err.message || "Something went wrong");
-    } finally {
-      setIsLoading(false);
+    const handleChange = (e) => {
+        setForm({ ...form, [e.target.name]: e.target.value })
+        setError('')
     }
-  };
 
-  return (
-    <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
-      <div
-        className="bg-dark-100 rounded-2xl p-8 w-full max-w-md mx-4 relative"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-white text-2xl font-bold mb-6 text-center">
-          {isLogin ? "Welcome Back" : "Create Account"}
-        </h2>
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        setLoading(true)
+        setError('')
 
-        {error && (
-          <p className="text-red-500 text-sm mb-4 text-center bg-red-500/10 py-2 rounded-lg">
-            {error}
-          </p>
-        )}
+        try {
+            if (mode === 'signup') {
+                if (form.name.trim().length < 2) {
+                    setError('Name must be at least 2 characters.')
+                    setLoading(false)
+                    return
+                }
+                await createAccount(form.email, form.password, form.name)
+            } else {
+                await login(form.email, form.password)
+            }
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {!isLogin && (
-            <input
-              type="text"
-              placeholder="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="bg-white/10 text-white placeholder-gray-400 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
-            />
-          )}
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="bg-white/10 text-white placeholder-gray-400 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
-          />
-          <input
-            type="password"
-            placeholder="Password (min 8 characters)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="bg-white/10 text-white placeholder-gray-400 px-4 py-3 rounded-lg outline-none focus:ring-2 focus:ring-purple-500"
-          />
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors disabled:opacity-50"
-          >
-            {isLoading ? "Please wait..." : isLogin ? "Sign In" : "Sign Up"}
-          </button>
-        </form>
+            // Fetch updated user and close modal
+            const { getCurrentUser } = await import('../appwriteAuth')
+            const user = await getCurrentUser()
+            setUser(user)
+            onClose()
+        } catch (err) {
+            setError(err?.message || 'Something went wrong. Please try again.')
+        } finally {
+            setLoading(false)
+        }
+    }
 
-        <p className="text-gray-400 text-center mt-4 text-sm">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}
-          <button
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setError("");
-            }}
-            className="text-purple-400 hover:text-purple-300 ml-1 font-medium"
-          >
-            {isLogin ? "Sign Up" : "Sign In"}
-          </button>
-        </p>
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+                {/* Close button */}
+                <button className="modal-close-btn" onClick={onClose}>✕</button>
 
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white text-xl"
-        >
-          ✕
-        </button>
-      </div>
-    </div>
-  );
-};
+                {/* Header */}
+                <div className="auth-modal-header">
+                    <h2 className="auth-modal-title">
+                        {mode === 'login' ? '👋 Welcome Back' : '🎬 Join CineVault'}
+                    </h2>
+                    <p className="auth-modal-subtitle">
+                        {mode === 'login'
+                            ? 'Sign in to your account to continue'
+                            : 'Create an account to track movies & leave reviews'}
+                    </p>
+                </div>
 
-export default AuthModal;
+                {/* Tab toggle */}
+                <div className="auth-tabs">
+                    <button
+                        className={`auth-tab ${mode === 'login' ? 'active' : ''}`}
+                        onClick={() => { setMode('login'); setError('') }}
+                    >
+                        Login
+                    </button>
+                    <button
+                        className={`auth-tab ${mode === 'signup' ? 'active' : ''}`}
+                        onClick={() => { setMode('signup'); setError('') }}
+                    >
+                        Sign Up
+                    </button>
+                </div>
+
+                {/* Form */}
+                <form className="auth-form" onSubmit={handleSubmit}>
+                    {mode === 'signup' && (
+                        <div className="form-group">
+                            <label htmlFor="auth-name">Full Name</label>
+                            <input
+                                id="auth-name"
+                                name="name"
+                                type="text"
+                                placeholder="John Doe"
+                                value={form.name}
+                                onChange={handleChange}
+                                required
+                                autoComplete="name"
+                            />
+                        </div>
+                    )}
+
+                    <div className="form-group">
+                        <label htmlFor="auth-email">Email</label>
+                        <input
+                            id="auth-email"
+                            name="email"
+                            type="email"
+                            placeholder="you@example.com"
+                            value={form.email}
+                            onChange={handleChange}
+                            required
+                            autoComplete="email"
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="auth-password">Password</label>
+                        <input
+                            id="auth-password"
+                            name="password"
+                            type="password"
+                            placeholder="••••••••"
+                            value={form.password}
+                            onChange={handleChange}
+                            required
+                            minLength={8}
+                            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                        />
+                    </div>
+
+                    {error && <p className="auth-error">⚠️ {error}</p>}
+
+                    <button
+                        id="auth-submit-btn"
+                        type="submit"
+                        className="auth-submit-btn"
+                        disabled={loading}
+                    >
+                        {loading
+                            ? 'Please wait...'
+                            : mode === 'login'
+                                ? 'Sign In'
+                                : 'Create Account'}
+                    </button>
+                </form>
+
+                <p className="auth-switch">
+                    {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+                    <button
+                        className="auth-switch-btn"
+                        onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError('') }}
+                    >
+                        {mode === 'login' ? 'Sign Up' : 'Login'}
+                    </button>
+                </p>
+            </div>
+        </div>
+    )
+}
+
+export default AuthModal

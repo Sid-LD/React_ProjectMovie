@@ -1,45 +1,32 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { getCurrentUser, signIn, signOut, signUp } from "../appwriteAuth";
+import { createContext, useContext, useState, useEffect } from 'react'
+import { getCurrentUser, logout as appwriteLogout } from '../appwriteAuth'
 
-const AuthContext = createContext();
+const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+    const [user, setUser] = useState(null)
+    const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    checkUser();
-  }, []);
+    useEffect(() => {
+        checkUser()
+    }, [])
 
-  const checkUser = async () => {
-    setIsLoading(true);
-    const currentUser = await getCurrentUser();
-    setUser(currentUser);
-    setIsLoading(false);
-  };
+    const checkUser = async () => {
+        const currentUser = await getCurrentUser()
+        setUser(currentUser)
+        setLoading(false)
+    }
 
-  const login = async (email, password) => {
-    await signIn(email, password);
-    const currentUser = await getCurrentUser();
-    setUser(currentUser);
-  };
+    const logout = async () => {
+        await appwriteLogout()
+        setUser(null)
+    }
 
-  const register = async (name, email, password) => {
-    await signUp(name, email, password);
-    const currentUser = await getCurrentUser();
-    setUser(currentUser);
-  };
+    return (
+        <AuthContext.Provider value={{ user, setUser, logout, loading }}>
+            {children}
+        </AuthContext.Provider>
+    )
+}
 
-  const logout = async () => {
-    await signOut();
-    setUser(null);
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => useContext(AuthContext)

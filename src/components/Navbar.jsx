@@ -1,40 +1,65 @@
-import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import AuthModal from "./AuthModal";
+import { useState } from 'react'
+import { useAuth } from '../context/AuthContext'
 
-const Navbar = () => {
-  const { user, logout } = useAuth();
-  const [showModal, setShowModal] = useState(false);
+const Navbar = ({ onAuthClick, onWatchlistClick, watchlistCount }) => {
+    const { user, logout } = useAuth()
+    const [menuOpen, setMenuOpen] = useState(false)
 
-  return (
-    <>
-      <nav className="flex justify-between items-center py-4">
-        <h1 className="text-white font-bold text-xl">🎬 CineSearch</h1>
-        <div className="flex items-center gap-3">
-          {user ? (
-            <>
-              <span className="text-gray-300 text-sm">Hi, {user.name} 👋</span>
-              <button
-                onClick={logout}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => setShowModal(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              Sign In
-            </button>
-          )}
-        </div>
-      </nav>
+    const handleLogout = async () => {
+        await logout()
+        setMenuOpen(false)
+    }
 
-      {showModal && <AuthModal onClose={() => setShowModal(false)} />}
-    </>
-  );
-};
+    return (
+        <nav className="navbar">
+            <div className="navbar-brand">
+                <span className="navbar-icon">🎬</span>
+                <span className="navbar-title">CineVault</span>
+            </div>
 
-export default Navbar;
+            <div className="navbar-actions">
+                {user ? (
+                    <>
+                        <button className="watchlist-btn" onClick={onWatchlistClick}>
+                            <span>📋</span>
+                            <span>Watchlist</span>
+                            {watchlistCount > 0 && (
+                                <span className="watchlist-badge">{watchlistCount}</span>
+                            )}
+                        </button>
+
+                        <div className="user-menu-wrapper">
+                            <button
+                                className="user-avatar-btn"
+                                onClick={() => setMenuOpen(!menuOpen)}
+                            >
+                                <span className="user-avatar">
+                                    {user.name ? user.name[0].toUpperCase() : 'U'}
+                                </span>
+                                <span className="user-name">
+                                    {user.name?.split(' ')[0]}
+                                </span>
+                                <span className="chevron">{menuOpen ? '▲' : '▼'}</span>
+                            </button>
+
+                            {menuOpen && (
+                                <div className="user-dropdown">
+                                    <p className="dropdown-email">{user.email}</p>
+                                    <button className="dropdown-logout" onClick={handleLogout}>
+                                        🚪 Logout
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </>
+                ) : (
+                    <button className="sign-in-btn" onClick={onAuthClick}>
+                        Sign In
+                    </button>
+                )}
+            </div>
+        </nav>
+    )
+}
+
+export default Navbar
