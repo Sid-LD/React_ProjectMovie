@@ -6,6 +6,7 @@ import Navbar from './components/Navbar.jsx'
 import AuthModal from './components/AuthModal.jsx'
 import MovieDetailModal from './components/MovieDetailModal.jsx'
 import WatchlistPage from './components/WatchlistPage.jsx'
+import MovieChatbot from './components/MovieChatbot.jsx'
 import { useDebounce } from 'react-use'
 import { getTrendingMovies, updateSearchCount } from './appwrite.js'
 import { getWatchlist } from './appwriteAuth.js'
@@ -179,6 +180,9 @@ const App = () => {
                     onRemove={handleRemoveFromWatchlist}
                 />
             )}
+
+            {/* AI Movie Chatbot */}
+            <MovieChatbot />
         </main>
     )
 }
